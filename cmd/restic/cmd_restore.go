@@ -80,6 +80,7 @@ func runRestore(opts RestoreOptions, gopts GlobalOptions, term *termstatus.Termi
 	snapshotIDString := args[0]
 
 	p := ui.NewRestore(term, gopts.verbosity, gopts.StatusUrl, gopts.StatusTime, gopts.StatusToken)
+	p.Http.Snapshot = snapshotIDString
 
 	var t tomb.Tomb
 	t.Go(func() error { return p.Run(t.Context(gopts.ctx)) })
@@ -88,6 +89,7 @@ func runRestore(opts RestoreOptions, gopts GlobalOptions, term *termstatus.Termi
 
 	repo, err := OpenRepository(gopts)
 	if err != nil {
+		p.Http.Error(err)
 		return err
 	}
 
@@ -95,13 +97,17 @@ func runRestore(opts RestoreOptions, gopts GlobalOptions, term *termstatus.Termi
 		lock, err := lockRepo(repo)
 		defer unlockRepo(lock)
 		if err != nil {
+			p.Http.Error(err)
 			return err
 		}
 	}
 
 	p.V("load index files")
+	p.Http.State = ui.HTTP_READING_INDEX
+	p.Http.SendUpdate()
 	err = repo.LoadIndex(ctx)
 	if err != nil {
+		p.Http.Error(err)
 		return err
 	}
 
@@ -110,17 +116,20 @@ func runRestore(opts RestoreOptions, gopts GlobalOptions, term *termstatus.Termi
 	if snapshotIDString == "latest" {
 		id, err = restic.FindLatestSnapshot(ctx, repo, opts.Paths, opts.Tags, opts.Host)
 		if err != nil {
+			p.Http.Error(err)
 			Exitf(1, "latest snapshot for criteria not found: %v Paths:%v Host:%v", err, opts.Paths, opts.Host)
 		}
 	} else {
 		id, err = restic.FindSnapshot(repo, snapshotIDString)
 		if err != nil {
+			p.Http.Error(err)
 			Exitf(1, "invalid id %q: %v", snapshotIDString, err)
 		}
 	}
 
 	res, err := restorer.NewRestorer(repo, id)
 	if err != nil {
+		p.Http.Error(err)
 		Exitf(2, "creating restorer failed: %v\n", err)
 	}
 
@@ -168,6 +177,9 @@ func runRestore(opts RestoreOptions, gopts GlobalOptions, term *termstatus.Termi
 	p.V("restoring %s to %s\n", res.Snapshot(), opts.Target)
 
 	err = res.RestoreTo(ctx, opts.Target, p)
+	if err != nil {
+		p.Http.Error(err)
+	}
 	if err == nil && opts.Verify {
 		p.V("verifying files in %s\n", opts.Target)
 		var count int
@@ -175,6 +187,8 @@ func runRestore(opts RestoreOptions, gopts GlobalOptions, term *termstatus.Termi
 		p.V("finished verifying %d files in %s\n", count, opts.Target)
 	}
 	p.Finish()
+	p.Http.State = ui.HTTP_NONE
+	p.Http.SendDone()
 	if totalErrors > 0 {
 		p.P("There were %d errors\n", totalErrors)
 	}
