@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"net/http"
+	"os"
 	"strconv"
 	"time"
 
@@ -41,6 +42,7 @@ func (h HttpBackup) newMessage() httpMessage {
 		Token:     h.token,
 		Action:    "backup",
 		StartTime: h.startTime,
+		PID:       os.Getpid(),
 	}
 	switch h.State {
 	case HTTP_NONE:

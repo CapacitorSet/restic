@@ -14,6 +14,7 @@ const (
 type httpMessage struct {
 	Token      string    `json:"token"`
 	Action     string    `json:"action"` // backup o restore
+	PID        int       `json:"pid"`
 	Status     string    `json:"status"`
 	Snapshot   string    `json:"snapshot"`
 	StartTime  time.Time `json:"start-time"`

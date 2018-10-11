@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"net/http"
+	"os"
 	"strconv"
 	"time"
 
@@ -43,6 +44,7 @@ func (h HttpRestore) newMessage() httpMessage {
 		Action:    "restore",
 		StartTime: h.startTime,
 		Snapshot:  h.Snapshot,
+		PID:       os.Getpid(),
 	}
 	switch h.State {
 	case HTTP_NONE:
