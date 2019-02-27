@@ -31,10 +31,11 @@ func (h HttpBackup) send(message httpMessage) {
 	if err != nil {
 		panic(err)
 	}
-	_, err = http.Post(h.url, "text/json", bytes.NewReader(j))
+	resp, err := http.Post(h.url, "text/json", bytes.NewReader(j))
 	if err != nil {
 		panic(err)
 	}
+	defer resp.Body.Close()
 }
 
 func (h HttpBackup) newMessage() httpMessage {
