@@ -874,10 +874,18 @@ type sshFxpExtendedPacket struct {
 	}
 }
 
-func (p sshFxpExtendedPacket) id() uint32     { return p.ID }
-func (p sshFxpExtendedPacket) readonly() bool { return p.SpecificPacket.readonly() }
+func (p sshFxpExtendedPacket) id() uint32 { return p.ID }
+func (p sshFxpExtendedPacket) readonly() bool {
+	if p.SpecificPacket == nil {
+		return true
+	}
+	return p.SpecificPacket.readonly()
+}
 
-func (p sshFxpExtendedPacket) respond(svr *Server) error {
+func (p sshFxpExtendedPacket) respond(svr *Server) responsePacket {
+	if p.SpecificPacket == nil {
+		return statusFromError(p, nil)
+	}
 	return p.SpecificPacket.respond(svr)
 }
 
@@ -897,7 +905,7 @@ func (p *sshFxpExtendedPacket) UnmarshalBinary(b []byte) error {
 	case "posix-rename@openssh.com":
 		p.SpecificPacket = &sshFxpExtendedPacketPosixRename{}
 	default:
-		return errUnknownExtendedPacket
+		return errors.Wrapf(errUnknownExtendedPacket, "packet type %v", p.SpecificPacket)
 	}
 
 	return p.SpecificPacket.UnmarshalBinary(bOrig)
@@ -946,7 +954,7 @@ func (p *sshFxpExtendedPacketPosixRename) UnmarshalBinary(b []byte) error {
 	return nil
 }
 
-func (p sshFxpExtendedPacketPosixRename) respond(s *Server) error {
+func (p sshFxpExtendedPacketPosixRename) respond(s *Server) responsePacket {
 	err := os.Rename(p.Oldpath, p.Newpath)
-	return s.sendError(p, err)
+	return statusFromError(p, err)
 }

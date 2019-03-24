@@ -48,7 +48,7 @@ data after 'forget' was run successfully, see the 'prune' command.
 
 .PP
 \fB\-\-keep\-within\fP=
-    keep snapshots that were created within \fB\fCduration\fR before the newest (e.g. 1y5m7d)
+    keep snapshots that are newer than \fB\fCduration\fR (eg. 1y5m7d2h) relative to the latest snapshot
 
 .PP
 \fB\-\-keep\-tag\fP=[]
@@ -57,10 +57,6 @@ data after 'forget' was run successfully, see the 'prune' command.
 .PP
 \fB\-\-host\fP=""
     only consider snapshots with the given \fB\fChost\fR
-
-.PP
-\fB\-\-hostname\fP=""
-    only consider snapshots with the given \fB\fChostname\fR (deprecated)
 
 .PP
 \fB\-\-tag\fP=[]
@@ -98,7 +94,7 @@ data after 'forget' was run successfully, see the 'prune' command.
 
 .PP
 \fB\-\-cache\-dir\fP=""
-    set the cache directory
+    set the cache directory. (default: use system default cache directory)
 
 .PP
 \fB\-\-cleanup\-cache\fP[=false]
@@ -107,6 +103,10 @@ data after 'forget' was run successfully, see the 'prune' command.
 .PP
 \fB\-\-json\fP[=false]
     set output mode to JSON for commands that support it
+
+.PP
+\fB\-\-key\-hint\fP=""
+    key ID of key to try decrypting first (default: $RESTIC\_KEY\_HINT)
 
 .PP
 \fB\-\-limit\-download\fP=0
@@ -127,6 +127,10 @@ data after 'forget' was run successfully, see the 'prune' command.
 .PP
 \fB\-o\fP, \fB\-\-option\fP=[]
     set extended option (\fB\fCkey=value\fR, can be specified multiple times)
+
+.PP
+\fB\-\-password\-command\fP=""
+    specify a shell command to obtain a password (default: $RESTIC\_PASSWORD\_COMMAND)
 
 .PP
 \fB\-p\fP, \fB\-\-password\-file\fP=""

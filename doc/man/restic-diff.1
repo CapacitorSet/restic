@@ -21,11 +21,14 @@ directory:
 
 .RS
 .IP \(bu 2
-The item was added
++  The item was added
 .IP \(bu 2
-The item was removed
+\-  The item was removed
+.IP \(bu 2
 U  The metadata (access mode, timestamps, ...) for the item was updated
+.IP \(bu 2
 M  The file's content was modified
+.IP \(bu 2
 T  The type was changed, e.g. a file was made a symlink
 
 .RE
@@ -48,7 +51,7 @@ T  The type was changed, e.g. a file was made a symlink
 
 .PP
 \fB\-\-cache\-dir\fP=""
-    set the cache directory
+    set the cache directory. (default: use system default cache directory)
 
 .PP
 \fB\-\-cleanup\-cache\fP[=false]
@@ -57,6 +60,10 @@ T  The type was changed, e.g. a file was made a symlink
 .PP
 \fB\-\-json\fP[=false]
     set output mode to JSON for commands that support it
+
+.PP
+\fB\-\-key\-hint\fP=""
+    key ID of key to try decrypting first (default: $RESTIC\_KEY\_HINT)
 
 .PP
 \fB\-\-limit\-download\fP=0
@@ -77,6 +84,10 @@ T  The type was changed, e.g. a file was made a symlink
 .PP
 \fB\-o\fP, \fB\-\-option\fP=[]
     set extended option (\fB\fCkey=value\fR, can be specified multiple times)
+
+.PP
+\fB\-\-password\-command\fP=""
+    specify a shell command to obtain a password (default: $RESTIC\_PASSWORD\_COMMAND)
 
 .PP
 \fB\-p\fP, \fB\-\-password\-file\fP=""

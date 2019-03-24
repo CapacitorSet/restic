@@ -9,8 +9,8 @@ Versions
 ========
 
 The cache directory is selected according to the `XDG base dir specification
-<http://standards.freedesktop.org/basedir-spec/basedir-spec-latest.html>`__.
-Each repository has its own cache sub-directory, consting of the repository ID
+<https://standards.freedesktop.org/basedir-spec/basedir-spec-latest.html>`__.
+Each repository has its own cache sub-directory, consisting of the repository ID
 which is chosen at ``init``. All cache directories for different repos are
 independent of each other.
 

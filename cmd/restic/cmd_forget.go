@@ -59,14 +59,15 @@ func init() {
 	f.IntVarP(&forgetOptions.Weekly, "keep-weekly", "w", 0, "keep the last `n` weekly snapshots")
 	f.IntVarP(&forgetOptions.Monthly, "keep-monthly", "m", 0, "keep the last `n` monthly snapshots")
 	f.IntVarP(&forgetOptions.Yearly, "keep-yearly", "y", 0, "keep the last `n` yearly snapshots")
-	f.VarP(&forgetOptions.Within, "keep-within", "", "keep snapshots that were created within `duration` before the newest (e.g. 1y5m7d)")
+	f.VarP(&forgetOptions.Within, "keep-within", "", "keep snapshots that are newer than `duration` (eg. 1y5m7d2h) relative to the latest snapshot")
 
 	f.Var(&forgetOptions.KeepTags, "keep-tag", "keep snapshots with this `taglist` (can be specified multiple times)")
-	// Sadly the commonly used shortcut `H` is already used.
 	f.StringVar(&forgetOptions.Host, "host", "", "only consider snapshots with the given `host`")
-	// Deprecated since 2017-03-07.
-	f.StringVar(&forgetOptions.Host, "hostname", "", "only consider snapshots with the given `hostname` (deprecated)")
+	f.StringVar(&forgetOptions.Host, "hostname", "", "only consider snapshots with the given `hostname`")
+	f.MarkDeprecated("hostname", "use --host")
+
 	f.Var(&forgetOptions.Tags, "tag", "only consider snapshots which include this `taglist` in the format `tag[,tag,...]` (can be specified multiple times)")
+
 	f.StringArrayVar(&forgetOptions.Paths, "path", nil, "only consider snapshots which include this (absolute) `path` (can be specified multiple times)")
 	f.BoolVarP(&forgetOptions.Compact, "compact", "c", false, "use compact format")
 
@@ -206,17 +207,17 @@ func runForget(opts ForgetOptions, gopts GlobalOptions, args []string) error {
 			}
 			Verbosef(":\n\n")
 
-			keep, remove := restic.ApplyPolicy(snapshotGroup, policy)
+			keep, remove, reasons := restic.ApplyPolicy(snapshotGroup, policy)
 
 			if len(keep) != 0 && !gopts.Quiet {
 				Printf("keep %d snapshots:\n", len(keep))
-				PrintSnapshots(globalOptions.stdout, keep, opts.Compact)
+				PrintSnapshots(globalOptions.stdout, keep, reasons, opts.Compact)
 				Printf("\n")
 			}
 
 			if len(remove) != 0 && !gopts.Quiet {
 				Printf("remove %d snapshots:\n", len(remove))
-				PrintSnapshots(globalOptions.stdout, remove, opts.Compact)
+				PrintSnapshots(globalOptions.stdout, remove, nil, opts.Compact)
 				Printf("\n")
 			}
 

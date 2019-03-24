@@ -24,37 +24,18 @@ These are up to date binaries, built in a reproducible and verifiable way, that
 you can download and run without having to do additional installation work.
 
 Please see the :ref:`official_binaries` section below for various downloads.
-
-Mac OS X
-========
-
-If you are using Mac OS X, you can install restic using the
-`homebrew <http://brew.sh/>`__ package manager:
-
-.. code-block:: console
-
-    $ brew install restic
+Official binaries can be updated in place by using the ``restic self-update``
+command.
 
 Arch Linux
 ==========
 
-On `Arch Linux <https://www.archlinux.org/>`__, there is a package called ``restic-git``
-which can be installed from AUR, e.g. with ``pacaur``:
+On `Arch Linux <https://www.archlinux.org/>`__, there is a package called ``restic``
+installed from the official community repos, e.g. with ``pacman -S``:
 
 .. code-block:: console
 
-    $ pacaur -S restic-git
-
-Nix & NixOS
-===========
-
-If you are using `Nix <https://nixos.org/nix/>`__ or `NixOS <https://nixos.org/>`__
-there is a package available named ``restic``.
-It can be installed uisng ``nix-env``:
-
-.. code-block:: console
-
-    $ nix-env --install restic 
+    $ pacman -S restic
 
 Debian
 ======
@@ -70,7 +51,62 @@ installed from the official repos, e.g. with ``apt-get``:
 .. warning:: Please be aware that, at the time of writing, Debian *stable*
    has ``restic`` version 0.3.3 which is very old. The *testing* and *unstable*
    branches have recent versions of ``restic``.
-   
+
+Fedora
+======
+
+restic can be installed using ``dnf``:
+
+.. code-block:: console
+
+    $ dnf install restic
+
+If you used restic from copr previously, remove the copr repo as follows to
+avoid any conflicts:
+
+.. code-block:: console
+
+   $ dnf copr remove copart/restic
+
+macOS
+=====
+
+If you are using macOS, you can install restic using the
+`homebrew <https://brew.sh/>`__ package manager:
+
+.. code-block:: console
+
+    $ brew install restic
+
+Nix & NixOS
+===========
+
+If you are using `Nix <https://nixos.org/nix/>`__ or `NixOS <https://nixos.org/>`__
+there is a package available named ``restic``.
+It can be installed using ``nix-env``:
+
+.. code-block:: console
+
+    $ nix-env --install restic
+
+OpenBSD
+=======
+
+On OpenBSD 6.3 and greater, you can install restic using ``pkg_add``:
+
+.. code-block:: console
+
+    # pkg_add restic
+
+FreeBSD
+=======
+
+On FreeBSD (11 and probably later versions), you can install restic using ``pkg install``:
+
+.. code-block:: console
+
+    # pkg install restic
+
 RHEL & CentOS
 =============
 
@@ -94,17 +130,6 @@ For CentOS7 use:
 
     $ yum-config-manager --add-repo https://copr.fedorainfracloud.org/coprs/copart/restic/repo/epel-7/copart-restic-epel-7.repo
 
-Fedora
-======
-
-restic can be installed via copr repository.
-
-.. code-block:: console
-
-    $ dnf install dnf-plugin-core
-    $ dnf copr enable copart/restic
-    $ dnf install restic
-
 Solus
 =====
 
@@ -113,15 +138,19 @@ restic can be installed from the official repo of Solus via the ``eopkg`` packag
 .. code-block:: console
 
     $ eopkg install restic
-    
-OpenBSD
+
+Windows
 =======
 
-On OpenBSD 6.3 and greater, you can install restic using ``pkg_add``:
+restic can be installed using `Scoop <https://scoop.sh/>`__:
 
 .. code-block:: console
 
-    # pkg_add restic
+    scoop install restic
+
+Using this installation method, ``restic.exe`` will automatically be available
+in the ``PATH``. It can be called from cmd.exe or PowerShell by typing ``restic``.
+
 
 .. _official_binaries:
 
@@ -138,6 +167,38 @@ are considered stable and releases are made regularly in a controlled manner.
 There's both pre-compiled binaries for different platforms as well as the source
 code available for download. Just download and run the one matching your system.
 
+The official binaries can be updated in place using the ``restic self-update``
+command:
+
+.. code-block:: console
+
+    $ restic version
+    restic 0.9.1 compiled with go1.10.3 on linux/amd64
+
+    $ restic self-update
+    find latest release of restic at GitHub
+    latest version is 0.9.2
+    download file SHA256SUMS
+    download SHA256SUMS
+    download file SHA256SUMS
+    download SHA256SUMS.asc
+    GPG signature verification succeeded
+    download restic_0.9.2_linux_amd64.bz2
+    downloaded restic_0.9.2_linux_amd64.bz2
+    saved 12115904 bytes in ./restic
+    successfully updated restic to version 0.9.2
+
+    $ restic version
+    restic 0.9.2 compiled with go1.10.3 on linux/amd64
+
+The ``self-update`` command uses the GPG signature on the files uploaded to
+GitHub to verify their authenticity. No external programs are necessary.
+
+.. note:: Please be aware that the user executing the ``restic self-update``
+   command must have the permission to replace the restic binary.
+   If you want to save the downloaded restic binary into a different file, pass
+   the file name via the option ``--output``.
+
 Unstable Builds
 ===============
 
@@ -150,9 +211,9 @@ master branch.
 Windows
 =======
 
-On Windows, put the `restic.exe` into `%SystemRoot%\System32` to use restic
+On Windows, put the `restic.exe` binary into `%SystemRoot%\\System32` to use restic
 in scripts without the need for absolute paths to the binary. This requires
-Admin rights.
+administrator rights.
 
 Docker Container
 ****************
@@ -187,6 +248,13 @@ In order to build restic from source, execute the following steps:
 
     $ cd restic
 
+    $ go run -mod=vendor build.go
+
+For Go versions < 1.11, the option ``-mod=vendor`` needs to be removed, like
+this:
+
+.. code-block:: console
+
     $ go run build.go
 
 You can easily cross-compile restic for all supported platforms, just
@@ -195,12 +263,14 @@ supply the target OS and platform via the command-line options like this
 
 .. code-block:: console
 
-    $ go run build.go --goos windows --goarch amd64
+    $ go run -mod=vendor build.go --goos windows --goarch amd64
 
-    $ go run build.go --goos freebsd --goarch 386
+    $ go run -mod=vendor build.go --goos freebsd --goarch 386
 
-    $ go run build.go --goos linux --goarch arm --goarm 6
-    
+    $ go run -mod=vendor build.go --goos linux --goarch arm --goarm 6
+
+Again, for Go < 1.11 ``-mod=vendor`` needs to be removed.
+
 The resulting binary is statically linked and does not require any
 libraries.
 

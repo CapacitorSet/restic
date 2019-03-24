@@ -33,18 +33,26 @@ again:
     processed 1.720 GiB in 0:12
     Files:        5307 new,     0 changed,     0 unmodified
     Dirs:         1867 new,     0 changed,     0 unmodified
-    Added:      1.700 GiB
+    Added:      1.200 GiB
     snapshot 40dc1520 saved
 
 As you can see, restic created a backup of the directory and was pretty
 fast! The specific snapshot just created is identified by a sequence of
 hexadecimal characters, ``40dc1520`` in this case.
 
-If you don't pass the ``--verbose`` option, restic will print less data. You'll still get a nice live status display. Be aware that the live status shows the processed files and not the transferred data. Transferred volume might be lower (due to deduplication) or higher.
+You can see that restic tells us it processed 1.720 GiB of data, this is the
+size of the files and directories in ``~/work`` on the local file system. It
+also tells us that only 1.200 GiB was added to the repository. This means that
+some of the data was duplicate and restic was able to efficiently reduce it.
+
+If you don't pass the ``--verbose`` option, restic will print less data. You'll
+still get a nice live status display. Be aware that the live status shows the
+processed files and not the transferred data. Transferred volume might be lower
+(due to de-duplication) or higher.
 
 If you run the command again, restic will create another snapshot of
-your data, but this time it's even faster. This is de-duplication at
-work!
+your data, but this time it's even faster and no new data was added to the
+repository (since all data is already there). This is de-duplication at work!
 
 .. code-block:: console
 
@@ -113,13 +121,18 @@ can compute which parts of the files need to be saved. When you backup
 the same directory again (maybe with new or changed files) restic will
 find the old snapshot in the repo and by default only reads those files
 that are new or have been modified since the last snapshot. This is
-decided based on the modify date of the file in the file system.
+decided based on the following attributes of the file in the file system:
+
+ * Type (file, symlink, or directory?)
+ * Modification time
+ * Size
+ * Inode number (internal number used to reference a file in a file system)
 
 Now is a good time to run ``restic check`` to verify that all data
 is properly stored in the repository. You should run this command regularly
 to make sure the internal structure of the repository is free of errors.
 
-Including and Excluding Files 
+Including and Excluding Files
 *****************************
 
 You can exclude folders and files by specifying exclude patterns, currently
@@ -179,7 +192,7 @@ For this, the special wildcard ``**`` can be used to match arbitrary
 sub-directories: The pattern ``foo/**/bar`` matches:
 
  * ``/dir1/foo/dir2/bar/file``
- * ``/foo/bar/file`` 
+ * ``/foo/bar/file``
  * ``/tmp/foo/bar``
 
 By specifying the option ``--one-file-system`` you can instruct restic
@@ -191,9 +204,12 @@ backup ``/sys`` or ``/dev`` on a Linux system:
 
     $ restic -r /srv/restic-repo backup --one-file-system /
 
+.. note:: ``--one-file-system`` is currently unsupported on Windows, and will
+    cause the backup to immediately fail with an error.
+
 By using the ``--files-from`` option you can read the files you want to
-backup from a file. This is especially useful if a lot of files have to
-be backed up that are not in the same folder or are maybe pre-filtered
+backup from one or more files. This is especially useful if a lot of files have
+to be backed up that are not in the same folder or are maybe pre-filtered
 by other software.
 
 For example maybe you want to backup files which have a name that matches a
@@ -314,3 +330,51 @@ some additional data in the repository, but the snapshot will never be
 created as it would only be written at the very (successful) end of
 the backup operation.  Previous snapshots will still be there and will still
 work.
+
+
+Environment Variables
+*********************
+
+In addition to command-line options, restic supports passing various options in
+environment variables. The following list of environment variables:
+
+.. code-block:: console
+
+    RESTIC_REPOSITORY                   Location of repository (replaces -r)
+    RESTIC_PASSWORD_FILE                Location of password file (replaces --password-file)
+    RESTIC_PASSWORD                     The actual password for the repository
+
+    AWS_ACCESS_KEY_ID                   Amazon S3 access key ID
+    AWS_SECRET_ACCESS_KEY               Amazon S3 secret access key
+
+    ST_AUTH                             Auth URL for keystone v1 authentication
+    ST_USER                             Username for keystone v1 authentication
+    ST_KEY                              Password for keystone v1 authentication
+
+    OS_AUTH_URL                         Auth URL for keystone authentication
+    OS_REGION_NAME                      Region name for keystone authentication
+    OS_USERNAME                         Username for keystone authentication
+    OS_PASSWORD                         Password for keystone authentication
+    OS_TENANT_ID                        Tenant ID for keystone v2 authentication
+    OS_TENANT_NAME                      Tenant name for keystone v2 authentication
+
+    OS_USER_DOMAIN_NAME                 User domain name for keystone authentication
+    OS_PROJECT_NAME                     Project name for keystone authentication
+    OS_PROJECT_DOMAIN_NAME              PRoject domain name for keystone authentication
+
+    OS_STORAGE_URL                      Storage URL for token authentication
+    OS_AUTH_TOKEN                       Auth token for token authentication
+
+    B2_ACCOUNT_ID                       Account ID or applicationKeyId for Backblaze B2
+    B2_ACCOUNT_KEY                      Account Key or applicationKey for Backblaze B2
+
+    AZURE_ACCOUNT_NAME                  Account name for Azure
+    AZURE_ACCOUNT_KEY                   Account key for Azure
+
+    GOOGLE_PROJECT_ID                   Project ID for Google Cloud Storage
+    GOOGLE_APPLICATION_CREDENTIALS      Application Credentials for Google Cloud Storage (e.g. $HOME/.config/gs-secret-restic-key.json)
+
+    RCLONE_BWLIMIT                      rclone bandwidth limit
+
+
+

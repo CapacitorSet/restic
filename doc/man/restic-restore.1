@@ -52,6 +52,10 @@ repository.
 \fB\-t\fP, \fB\-\-target\fP=""
     directory to extract data to
 
+.PP
+\fB\-\-verify\fP[=false]
+    verify restored files content
+
 
 .SH OPTIONS INHERITED FROM PARENT COMMANDS
 .PP
@@ -60,7 +64,7 @@ repository.
 
 .PP
 \fB\-\-cache\-dir\fP=""
-    set the cache directory
+    set the cache directory. (default: use system default cache directory)
 
 .PP
 \fB\-\-cleanup\-cache\fP[=false]
@@ -69,6 +73,10 @@ repository.
 .PP
 \fB\-\-json\fP[=false]
     set output mode to JSON for commands that support it
+
+.PP
+\fB\-\-key\-hint\fP=""
+    key ID of key to try decrypting first (default: $RESTIC\_KEY\_HINT)
 
 .PP
 \fB\-\-limit\-download\fP=0
@@ -89,6 +97,10 @@ repository.
 .PP
 \fB\-o\fP, \fB\-\-option\fP=[]
     set extended option (\fB\fCkey=value\fR, can be specified multiple times)
+
+.PP
+\fB\-\-password\-command\fP=""
+    specify a shell command to obtain a password (default: $RESTIC\_PASSWORD\_COMMAND)
 
 .PP
 \fB\-p\fP, \fB\-\-password\-file\fP=""

@@ -1,9 +1,9 @@
-|Documentation| |Build Status| |Build status| |Report Card| |Say Thanks| |TestCoverage|
+|Documentation| |Build Status| |Build status| |Report Card| |Say Thanks| |TestCoverage| |Reviewed by Hound|
 
 Introduction
 ------------
 
-restic is a backup program that is fast, efficient and secure.
+restic is a backup program that is fast, efficient and secure. It supports the three major operating systems (Linux, macOS, Windows) and a few smaller ones (FreeBSD, OpenBSD).
 
 For detailed usage and installation instructions check out the `documentation <https://restic.readthedocs.io/en/latest>`__.
 
@@ -133,3 +133,5 @@ Storage are sponsored by `AppsCode <https://appscode.com>`__!
    :target: https://codecov.io/gh/restic/restic
 .. |AppsCode| image:: https://cdn.appscode.com/images/logo/appscode/ac-logo-color.png
    :target: https://appscode.com
+.. |Reviewed by Hound| image:: https://img.shields.io/badge/Reviewed_by-Hound-8E64B0.svg
+   :target: https://houndci.com

@@ -21,7 +21,7 @@ func formatBytes(c uint64) string {
 	case c > 1<<10:
 		return fmt.Sprintf("%.3f KiB", b/(1<<10))
 	default:
-		return fmt.Sprintf("%dB", c)
+		return fmt.Sprintf("%d B", c)
 	}
 }
 
@@ -90,6 +90,6 @@ func formatNode(path string, n *restic.Node, long bool) string {
 
 	return fmt.Sprintf("%s %5d %5d %6d %s %s%s",
 		mode|n.Mode, n.UID, n.GID, n.Size,
-		n.ModTime.Format(TimeFormat), path,
+		n.ModTime.Local().Format(TimeFormat), path,
 		target)
 }

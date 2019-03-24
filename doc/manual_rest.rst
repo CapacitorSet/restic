@@ -36,16 +36,18 @@ Usage help is available:
       rebuild-index Build a new index file
       restore       Extract the data from a snapshot
       snapshots     List all snapshots
+      stats         Count up sizes and show information about repository data
       tag           Modify tags on snapshots
       unlock        Remove locks other processes created
       version       Print version information
 
     Flags:
           --cacert file              file to load root certificates from (default: use system certificates)
-          --cache-dir string         set the cache directory
+          --cache-dir string         set the cache directory. (default: use system default cache directory)
           --cleanup-cache            auto remove old cache directories
       -h, --help                     help for restic
           --json                     set output mode to JSON for commands that support it
+          --key-hint string          key ID of key to try decrypting first (default: $RESTIC_KEY_HINT)
           --limit-download int       limits downloads to a maximum rate in KiB/s. (default: unlimited)
           --limit-upload int         limits uploads to a maximum rate in KiB/s. (default: unlimited)
           --no-cache                 do not use a local cache
@@ -79,7 +81,7 @@ command:
           --exclude-caches                   excludes cache directories that are marked with a CACHEDIR.TAG file
           --exclude-file file                read exclude patterns from a file (can be specified multiple times)
           --exclude-if-present stringArray   takes filename[:header], exclude contents of directories containing filename (except filename itself) if header of that file is as provided (can be specified multiple times)
-          --files-from string                read the files to backup from file (can be combined with file args)
+          --files-from string                read the files to backup from file (can be combined with file args/can be specified multiple times)
       -f, --force                            force re-reading the target files/directories (overrides the "parent" flag)
       -h, --help                             help for backup
           --hostname hostname                set the hostname for the snapshot manually. To prevent an expensive rescan use the "parent" flag
@@ -93,9 +95,10 @@ command:
 
     Global Flags:
           --cacert file              file to load root certificates from (default: use system certificates)
-          --cache-dir string         set the cache directory
+          --cache-dir string         set the cache directory. (default: use system default cache directory)
           --cleanup-cache            auto remove old cache directories
           --json                     set output mode to JSON for commands that support it
+          --key-hint string          key ID of key to try decrypting first (default: $RESTIC_KEY_HINT)
           --limit-download int       limits downloads to a maximum rate in KiB/s. (default: unlimited)
           --limit-upload int         limits uploads to a maximum rate in KiB/s. (default: unlimited)
           --no-cache                 do not use a local cache
@@ -168,7 +171,7 @@ Browse repository objects
 
 Internally, a repository stores data of several different types
 described in the `design
-documentation <https://github.com/restic/restic/blob/master/doc/Design.rst>`__.
+documentation <https://github.com/restic/restic/blob/master/doc/design.rst>`__.
 You can ``list`` objects such as blobs, packs, index, snapshots, keys or
 locks with the following command:
 
@@ -178,7 +181,7 @@ locks with the following command:
     d369ccc7d126594950bf74f0a348d5d98d9e99f3215082eb69bf02dc9b3e464c
 
 The ``find`` command searches for a given
-`pattern <http://golang.org/pkg/path/filepath/#Match>`__ in the
+`pattern <https://golang.org/pkg/path/filepath/#Match>`__ in the
 repository.
 
 .. code-block:: console
@@ -235,6 +238,76 @@ The following metadata is handled by restic:
 - Content
 - Subtree
 - ExtendedAttributes
+
+
+Getting information about repository data
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Use the ``stats`` command to count up stats about the data in the repository.
+There are different counting modes available using the ``--mode`` flag,
+depending on what you want to calculate. The default is the restore size, or
+the size required to restore the files:
+
+-  ``restore-size`` (default) counts the size of the restored files.
+-  ``files-by-contents`` counts the total size of unique files as given by their
+   contents. This can be useful since a file is considered unique only if it has
+   unique contents. Keep in mind that a small change to a large file (even when the
+   file name/path hasn't changed) will cause them to look like different files, thus
+   essentially causing the whole size of the file to be counted twice.
+-  ``raw-data`` counts the size of the blobs in the repository, regardless of how many
+   files reference them. This tells you how much restic has reduced all your original
+   data down to (either for a single snapshot or across all your backups), and compared
+   to the size given by the restore-size mode, can tell you how much deduplication is
+   helping you.
+-  ``blobs-per-file`` is kind of a mix between files-by-contents and raw-data modes;
+   it is useful for knowing how much value your backup is providing you in terms of unique
+   data stored by file. Like files-by-contents, it is resilient to file renames/moves.
+   Unlike files-by-contents, it does not balloon to high values when large files have
+   small edits, as long as the file path stayed the same. Unlike raw-data, this mode
+   DOES consider how many files point to each blob such that the more files a blob is
+   referenced by, the more it counts toward the size.
+
+For example, to calculate how much space would be
+required to restore the latest snapshot (from any host that made it):
+
+.. code-block:: console
+
+    $ restic stats latest
+    password is correct
+    Total File Count:   10538
+          Total Size:   37.824 GiB
+
+If multiple hosts are backing up to the repository, the latest snapshot may not
+be the one you want. You can specify the latest snapshot from only a specific
+host by using the ``--host`` flag:
+
+.. code-block:: console
+
+    $ restic stats --host myserver latest
+    password is correct
+    Total File Count:   21766
+          Total Size:   481.783 GiB
+
+There we see that it would take 482 GiB of disk space to restore the latest
+snapshot from "myserver".
+
+But how much space does that snapshot take on disk? In other words, how much
+has restic's deduplication helped? We can check:
+
+.. code-block:: console
+
+    $ restic stats --host myserver --mode raw-data latest
+    password is correct
+    Total Blob Count:   340847
+          Total Size:   458.663 GiB
+
+Comparing this size to the previous command, we see that restic has saved
+about 23 GiB of space with deduplication.
+
+Which mode you use depends on your exact use case. Some modes are more useful
+across all snapshots, while others make more sense on just a single snapshot,
+depending on what you're trying to calculate.
+
 
 Scripting
 ---------
