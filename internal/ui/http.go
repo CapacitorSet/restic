@@ -29,8 +29,6 @@ type httpMessage struct {
 	// The fields below are only valid during a backup.
 	ETA    uint64 `json:"eta"`
 	HasETA bool   `json:"has_eta"` // True if no ETA is available
-
-	// The fields below are only valid for status=done.
 	FilesNew        uint `json:"files_new"`
 	FilesChanged    uint `json:"files_changed"`
 	FilesUnmodified uint `json:"files_unmodified"`

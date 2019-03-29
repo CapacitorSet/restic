@@ -82,6 +82,15 @@ func (h HttpBackup) SendUpdate() {
 	} else {
 		msg.FilesProcessed = h.b.processed.Files
 		msg.BytesProcessed = h.b.processed.Bytes
+
+		msg.FilesChanged = h.b.summary.Files.Changed
+		msg.DirsChanged = h.b.summary.Dirs.Changed
+
+		msg.FilesNew = h.b.summary.Files.New
+		msg.DirsNew = h.b.summary.Dirs.New
+
+		msg.FilesUnmodified = h.b.summary.Files.Unchanged
+		msg.DirsUnmodified = h.b.summary.Dirs.Unchanged
 	}
 	msg.NumErrors = h.b.errors
 	if (h.b.total.Files != 0 || h.b.total.Dirs != 0) && h.b.eta > 0 && h.b.processed.Bytes < h.b.total.Bytes {

@@ -337,6 +337,7 @@ func (b *Backup) CompleteItemFn(item string, previous, current *restic.Node, s a
 
 // ReportTotal sets the total stats up to now
 func (b *Backup) ReportTotal(item string, s archiver.ScanStats) {
+	b.Http.ScanStats = s
 	select {
 	case b.totalCh <- counter{Files: s.Files, Dirs: s.Dirs, Bytes: s.Bytes}:
 	case <-b.finished:

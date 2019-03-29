@@ -500,10 +500,7 @@ func runBackup(opts BackupOptions, gopts GlobalOptions, term *termstatus.Termina
 	sc.SelectByName = selectByNameFilter
 	sc.Select = selectFilter
 	sc.Error = p.ScannerError
-	sc.Result = func(item string, s archiver.ScanStats) {
-		p.ReportTotal(item, s)
-		p.Http.ScanStats = s
-	}
+	sc.Result = p.ReportTotal
 
 	p.V("start scan on %v", targets)
 	p.Http.State = ui.HTTP_SCANNING_DATA
