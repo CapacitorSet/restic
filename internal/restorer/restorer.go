@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"time"
 	"github.com/restic/restic/internal/crypto"
 	"github.com/restic/restic/internal/errors"
 
@@ -236,7 +237,10 @@ func (res *Restorer) RestoreTo(ctx context.Context, dst string, p *ui.Restore) e
 		enterDir: func(node *restic.Node, target, location string) error {
 			// create dir with default permissions
 			// #leaveDir restores dir metadata after visiting all children
-			return fs.MkdirAll(target, 0700)
+			start := time.Now()
+			err := fs.MkdirAll(target, 0700)
+			p.CompleteItemFn(location, node.Type, time.Now().Sub(start))
+			return err
 		},
 
 		visitNode: func(node *restic.Node, target, location string) error {
@@ -272,7 +276,7 @@ func (res *Restorer) RestoreTo(ctx context.Context, dst string, p *ui.Restore) e
 		return err
 	}
 
-	err = filerestorer.restoreFiles(ctx, func(location string, err error) { res.Error(location, err) })
+	err = filerestorer.restoreFiles(ctx, func(location string, err error) { res.Error(location, err) }, p.CompleteItemFn)
 	if err != nil {
 		return err
 	}

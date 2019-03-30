@@ -84,6 +84,7 @@ func (h HttpRestore) SendUpdate() {
 		msg.FilesProcessed = h.r.processed.Files
 		msg.BytesProcessed = h.r.processed.Bytes
 	}
+	msg.DirsNew = h.r.summary.Dirs.New
 	msg.NumErrors = h.r.errors
 	if (h.r.total.Files != 0 || h.r.total.Dirs != 0) && h.r.eta > 0 && h.r.processed.Bytes < h.r.total.Bytes {
 		msg.HasETA = true
@@ -98,13 +99,6 @@ func (h *HttpRestore) SendDone() {
 	msg := h.newMessage()
 	h.State = HTTP_NONE
 	msg.FilesNew = h.r.summary.Files.New
-	msg.FilesChanged = h.r.summary.Files.Changed
-	msg.FilesUnmodified = h.r.summary.Files.Unchanged
-	/*
-	msg.DirsNew = h.r.summary.Dirs.New
-	msg.DirsChanged = h.r.summary.Dirs.Changed
-	msg.DirsUnmodified = h.r.summary.Dirs.Unchanged
-	*/
 	msg.SecsElapsed = int64(time.Since(h.r.start).Seconds())
 	msg.FilesProcessed = h.r.processed.Files
 	msg.BytesProcessed = h.r.processed.Bytes

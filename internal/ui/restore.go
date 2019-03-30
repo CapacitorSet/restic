@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/restic/restic/internal/archiver"
-	"github.com/restic/restic/internal/restic"
 	"github.com/restic/restic/internal/ui/termstatus"
 	"sync"
 )
@@ -41,10 +40,8 @@ type Restore struct {
 		sync.Mutex
 		Files, Dirs struct {
 			New       uint
-			Changed   uint
-			Unchanged uint
 		}
-		archiver.ItemStats
+		// archiver.ItemStats
 	}
 }
 
@@ -205,78 +202,36 @@ func (b *Restore) CompleteBlob(filename string, bytes uint64) {
 
 // CompleteItemFn is the status callback function for the archiver when a
 // file/dir has been saved successfully.
-func (b *Restore) CompleteItemFn(item string, previous, current *restic.Node, s archiver.ItemStats, d time.Duration) {
+func (b *Restore) CompleteItemFn(item, itemType string, d time.Duration) {
+	/*
 	b.summary.Lock()
 	b.summary.ItemStats.Add(s)
 	b.summary.Unlock()
+	*/
 
-	if current == nil {
-		// error occurred, tell the status display to remove the line
-		b.workerCh <- fileWorkerMessage{
-			filename: item,
-			done:     true,
-		}
-		return
-	}
-
-	switch current.Type {
+	switch itemType {
 	case "file":
 		b.processedCh <- counter{Files: 1}
 		b.workerCh <- fileWorkerMessage{
 			filename: item,
 			done:     true,
 		}
+
+		b.VV("new       %v, saved in %.3fs", item, d.Seconds())
+		b.summary.Lock()
+		b.summary.Files.New++
+		b.summary.Unlock()
 	case "dir":
 		b.processedCh <- counter{Dirs: 1}
-	}
-
-	if current.Type == "dir" {
-		if previous == nil {
-			b.VV("new       %v, saved in %.3fs (%v added, %v metadata)", item, d.Seconds(), formatBytes(s.DataSize), formatBytes(s.TreeSize))
-			b.summary.Lock()
-			b.summary.Dirs.New++
-			b.summary.Unlock()
-			return
-		}
-
-		if previous.Equals(*current) {
-			b.VV("unchanged %v", item)
-			b.summary.Lock()
-			b.summary.Dirs.Unchanged++
-			b.summary.Unlock()
-		} else {
-			b.VV("modified  %v, saved in %.3fs (%v added, %v metadata)", item, d.Seconds(), formatBytes(s.DataSize), formatBytes(s.TreeSize))
-			b.summary.Lock()
-			b.summary.Dirs.Changed++
-			b.summary.Unlock()
-		}
-
-	} else if current.Type == "file" {
-
 		b.workerCh <- fileWorkerMessage{
-			done:     true,
 			filename: item,
+			done:     true,
 		}
 
-		if previous == nil {
-			b.VV("new       %v, saved in %.3fs (%v added)", item, d.Seconds(), formatBytes(s.DataSize))
-			b.summary.Lock()
-			b.summary.Files.New++
-			b.summary.Unlock()
-			return
-		}
-
-		if previous.Equals(*current) {
-			b.VV("unchanged %v", item)
-			b.summary.Lock()
-			b.summary.Files.Unchanged++
-			b.summary.Unlock()
-		} else {
-			b.VV("modified  %v, saved in %.3fs (%v added)", item, d.Seconds(), formatBytes(s.DataSize))
-			b.summary.Lock()
-			b.summary.Files.Changed++
-			b.summary.Unlock()
-		}
+		b.VV("new       %v, saved in %.3fs", item, d.Seconds())
+		b.summary.Lock()
+		b.summary.Dirs.New++
+		b.summary.Unlock()
 	}
 }
 
@@ -299,15 +254,16 @@ func (b *Restore) Finish() {
 	close(b.finished)
 
 	b.P("\n")
-	b.P("Files:       %5d new, %5d changed, %5d unmodified\n", b.summary.Files.New, b.summary.Files.Changed, b.summary.Files.Unchanged)
-	// r.P("Dirs:        %5d new, %5d changed, %5d unmodified\n", r.summary.Dirs.New, r.summary.Dirs.Changed, r.summary.Dirs.Unchanged)
+	b.P("Files:       %5d new\n", b.summary.Files.New)
+	/*
 	b.V("Data Blobs:  %5d new\n", b.summary.ItemStats.DataBlobs)
 	b.V("Tree Blobs:  %5d new\n", b.summary.ItemStats.TreeBlobs)
 	b.P("Added:      %-5s\n", formatBytes(b.summary.ItemStats.DataSize+b.summary.ItemStats.TreeSize))
+	*/
 	b.P("Errors:      %5d\n", b.errors)
 	b.P("\n")
 	b.P("processed %v files, %v in %s",
-		b.summary.Files.New+b.summary.Files.Changed+b.summary.Files.Unchanged,
+		b.summary.Files.New,
 		formatBytes(b.totalBytes),
 		formatDuration(time.Since(b.start)),
 	)

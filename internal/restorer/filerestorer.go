@@ -4,6 +4,7 @@ import (
 	"context"
 	"io"
 	"path/filepath"
+	"time"
 
 	"github.com/restic/restic/internal/crypto"
 	"github.com/restic/restic/internal/debug"
@@ -93,7 +94,7 @@ type processingInfo struct {
 	files map[*fileInfo]error
 }
 
-func (r *fileRestorer) restoreFiles(ctx context.Context, onError func(path string, err error)) error {
+func (r *fileRestorer) restoreFiles(ctx context.Context, onError func(path string, err error), onFile func(item, itemType string, d time.Duration)) error {
 	// TODO conditionally enable when debug log is on
 	// for _, file := range r.files {
 	// 	dbgmsg := file.location + ": "
@@ -160,6 +161,8 @@ func (r *fileRestorer) restoreFiles(ctx context.Context, onError func(path strin
 		go worker()
 	}
 
+	start := time.Now()
+
 	processFeedback := func(pack *packInfo, ferrors map[*fileInfo]error) {
 		// update files blobIdx
 		// must do it here to avoid race among worker and processing feedback threads
@@ -173,6 +176,7 @@ func (r *fileRestorer) restoreFiles(ctx context.Context, onError func(path strin
 				delete(inprogress, file)
 				failure = append(failure, file)
 			} else {
+				onFile(file.location, "file", time.Now().Sub(start))
 				r.idx.forEachFilePack(file, func(packIdx int, packID restic.ID, packBlobs []restic.Blob) bool {
 					file.blobs = file.blobs[len(packBlobs):]
 					return false // only interesed in the first pack
