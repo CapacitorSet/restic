@@ -99,6 +99,7 @@ func (h *HttpRestore) SendDone() {
 	msg := h.newMessage()
 	h.State = HTTP_NONE
 	msg.FilesNew = h.r.summary.Files.New
+	msg.DirsNew = h.r.summary.Dirs.New
 	msg.SecsElapsed = int64(time.Since(h.r.start).Seconds())
 	msg.FilesProcessed = h.r.processed.Files
 	msg.BytesProcessed = h.r.processed.Bytes

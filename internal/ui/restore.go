@@ -255,6 +255,7 @@ func (b *Restore) Finish() {
 
 	b.P("\n")
 	b.P("Files:       %5d new\n", b.summary.Files.New)
+	b.P("Dirs:        %5d new\n", b.summary.Dirs.New)
 	/*
 	b.V("Data Blobs:  %5d new\n", b.summary.ItemStats.DataBlobs)
 	b.V("Tree Blobs:  %5d new\n", b.summary.ItemStats.TreeBlobs)
