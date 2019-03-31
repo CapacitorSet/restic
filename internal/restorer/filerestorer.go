@@ -54,6 +54,9 @@ type packInfo struct {
 
 	// used by packHeap
 	index int
+
+	// number of bytes
+	size  uint64
 }
 
 // fileRestorer restores set of files
@@ -94,7 +97,7 @@ type processingInfo struct {
 	files map[*fileInfo]error
 }
 
-func (r *fileRestorer) restoreFiles(ctx context.Context, onError func(path string, err error), onFile func(item, itemType string, d time.Duration)) error {
+func (r *fileRestorer) restoreFiles(ctx context.Context, onError func(path string, err error), onFile func(item, itemType string, d time.Duration), onBlob func(filename string, size uint64)) error {
 	// TODO conditionally enable when debug log is on
 	// for _, file := range r.files {
 	// 	dbgmsg := file.location + ": "
@@ -164,6 +167,7 @@ func (r *fileRestorer) restoreFiles(ctx context.Context, onError func(path strin
 	start := time.Now()
 
 	processFeedback := func(pack *packInfo, ferrors map[*fileInfo]error) {
+		onBlob("", pack.size)
 		// update files blobIdx
 		// must do it here to avoid race among worker and processing feedback threads
 		var success []*fileInfo
@@ -248,6 +252,8 @@ func (r *fileRestorer) downloadPack(ctx context.Context, pack *packInfo) (reader
 			return true // keep going
 		})
 	}
+
+	pack.size = uint64(end-start)
 
 	packReader, err := r.packCache.get(pack.id, start, int(end-start), func(offset int64, length int, wr io.WriteSeeker) error {
 		h := restic.Handle{Type: restic.DataFile, Name: pack.id.String()}

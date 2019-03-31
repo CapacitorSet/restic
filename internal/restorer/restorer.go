@@ -276,7 +276,7 @@ func (res *Restorer) RestoreTo(ctx context.Context, dst string, p *ui.Restore) e
 		return err
 	}
 
-	err = filerestorer.restoreFiles(ctx, func(location string, err error) { res.Error(location, err) }, p.CompleteItemFn)
+	err = filerestorer.restoreFiles(ctx, func(location string, err error) { res.Error(location, err) }, p.CompleteItemFn, p.CompleteBlob)
 	if err != nil {
 		return err
 	}
